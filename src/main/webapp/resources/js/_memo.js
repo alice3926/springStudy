@@ -21,7 +21,7 @@ function suntaek_proc(value1, value2, value3){
 
 function GoPage(value1){
     var param;
-	var url = $("#span_path").text() + "/memo_servlet/" + value1 + ".do";
+	var url = path+ "/memo/" + value1 + ".do";
 	
 	if(value1 == "list"){
 		param = {

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall">
+	 
+	<select id="getTotalRecord" resultType="int">
+      select count(*) from cart
+   </select>
+   
+     
+    <insert id="setInsert">
+    	<selectKey keyProperty="no" resultType="int" order="BEFORE">
+    		select seq_cart.nextval from dual
+    	</selectKey>
+    
+    
+    	insert into cart values(#{no},#{dto.memberNo},#{dto.productNo},#{dto.amount},current_timestamp)
+    </insert>
+   
+   <select id="getList" resultType="com.test.springStudy.shop.model.dto.CartDTO">
+      select * from (select A.*, Rownum Rnum from (
+ 			select c.no, p.no productNo, c.memberNo, p.product_img, p.name product_name, p.price product_price,c.amount,(p.price * c.amount) buy_money, 
+ 			c.regi_date from cart c, product p  where c.productNo = p.no  and c.memberNo=#{dto.memberNo} order by c.no desc
+ 	<![CDATA[  
+       ) A) where Rnum >= #{startRecord} and Rnum <= #{lastRecord}
+     ]]>
+   </select>
+   
+   <select id="getListCartProductGroup" resultType="com.test.springStudy.shop.model.dto.CartDTO">
+     select p.name product_name, sum(c.amount * p.price) buy_money 
+				from cart c inner join product p on c.productNo = p.no 
+				group by p.name 
+				order by product_name asc
+   </select>
+   <update id="setSujung">
+   		update cart set amount=#{jumunsu} where no=#{no}
+   </update>
+   
+   
+   
+   
+   <delete id="setDeleteBatch" parameterType="map">
+   		delete from cart
+   		where no in (
+   		<foreach collection="array" index="index" item="item" open="" close="" separator=",">
+   			#{item}
+   			</foreach>
+   			
+   		)
+   </delete>
+   		
+   
+
+  
+</mapper>
