@@ -14,7 +14,7 @@
 				<button type="button" onclick="suntaek_proc('insertProc','','${dto.no}');">작성하기</button>
 			</c:if>
 			<c:if test="${onedto.no != null }">
-				<button type="button" onclick="suntaek_proc('sujungProc','','${dto.no}');">수정하기</button>
+				<button type="button" onclick="suntaek_proc('sujungProc','','${onedto.no}');">수정하기</button>
 			</c:if>
 		</td>
 	</tr>

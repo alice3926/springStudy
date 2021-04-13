@@ -16,13 +16,14 @@ function suntaek_proc(value1, value2, value3){
    if (value3 != "0"){
       $("#span_no").text(value3);
    }
-   GoPage(value1);   
+   GoPage(value1); 
+
 }
 
 function GoPage(value1){
     var param;
-	var url = path+ "/memo/" + value1 + ".do";
-	
+	var url = path + "/memo/" + value1 + ".do";
+
 	if(value1 == "list"){
 		param = {
 			"pageNumber" : $("#span_pageNumber").text(),
@@ -30,7 +31,6 @@ function GoPage(value1){
 	}else if(value1 == "insertProc" || value1 == "sujungProc" || value1 == "sakjaeProc"){
 		param = {
 			"no" : $("#span_no").text(),
-			"oneno" : $("#oneno").val(),
 			"writerName" : $("#writerName").val(),
 			"content" : $("#content").val()
 		}
@@ -41,27 +41,40 @@ function GoPage(value1){
 		}
 		
 	}
-	console.log(url);
+	//console.log(url);
 	$.ajax({
 		type: "post",
 		data: param,
 		url: url,
+		cache : false,
 		success: function(data){
-			if(value1 == "list" ||value1 =="sujung"){
+			if(value1 == "list"){
+				$("#result").html(data);
+			}else if(value1 =="sujung"){
 				$("#result").html(data);
 			}else if(value1 =="insertProc"){
 				$("#result").html(data);
 				if ($("#span_passwd").text() == "T"){
 					alert('추가되었습니다.');
 					$("#span_no").text("");
-					
 			 		suntaek_proc('list','1','');
 			 	}else{
 			 		alert('추가실패.');
-			 		suntaek_proc('insert','0','');
+			 		suntaek_proc('list','1','');
 			 	}
-			
-			}else if(value1 =="sujungProc" || value1 =="sakjaeProc"){
+			}else if(value1 =="sujungProc"){
+				$("#result").html(data);
+				if ($("#span_passwd").text() == "T"){
+					alert('성공.');
+					$("#span_no").text("");
+					$("#span_writer").text("");
+					$("#span_content").text("");
+			 		suntaek_proc('list','1','');
+			 	}else{
+			 		alert('실패.');
+			 		suntaek_proc('list','1','');
+			 	}
+			}else if(value1 =="sakjaeProc"){
 				$("#result").html(data);
 				if ($("#span_passwd").text() == "T"){
 					alert('성공.');
@@ -74,7 +87,8 @@ function GoPage(value1){
 			 		suntaek_proc('list','1','');
 			 	}
 			}else{
-				$("#result").html(data);
+				alert('엘스들어옴');
+				//$("#result").html(data);
 			}
 		}
 	});

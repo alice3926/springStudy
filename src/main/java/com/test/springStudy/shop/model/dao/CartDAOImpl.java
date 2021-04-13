@@ -36,9 +36,7 @@ public class CartDAOImpl implements CartDAO{
 	}
 
 	@Override
-	public int getTotalRecord(String search_option, String search_data) {
-		
-		
+	public int getTotalRecord() {
 		int result = sqlSession.selectOne("mall.getTotalRecord");
 		return result;
 	}

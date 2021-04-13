@@ -29,13 +29,13 @@
 function login(){
 	if(confirm('로그인하시겠습니까?')){
 		DirForm.method="post";
-		DirForm.action="${path}/member_servlet/loginProc.do";
+		DirForm.action="${path}/member/loginProc.do";
 		DirForm.submit();
 	}
 }
 function join(){
 	if(confirm('가입페이지로 이동하시겠습니까?')){
-		location.href="${path}/member_servlet/index.do?word=chuga";
+		location.href="${path}/member/index.do?word=chuga";
 	}
 }
 </script>

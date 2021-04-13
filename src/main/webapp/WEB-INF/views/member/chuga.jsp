@@ -1,18 +1,16 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-
 <%@ include file="../include/inc_header.jsp" %>
-     
+
+<form name="DirForm">
 <table border="1" align="center" width="80%">
 	<tr>
-		<td colspan="2">
-			<h2>회원가입</h2>
-		</td>
+		<td colspan="2"><h2>회원가입</h2></td>
 	</tr>
 	<tr>
 		<td width="150">아이디</td>
 		<td>
-			<input type="text" name="id" id="id" value="">
+			<input type="text" name="id" id="id" value="${id }">
 			<button type="button" id="id_check_div">아이디찾기</button>
 			<button type="button" id="id_check_win">아이디찾기(새창)</button>
 			<br>
@@ -34,10 +32,13 @@
 	<tr>
 		<td>성별</td>
 		<td>
-			<input type="radio" name="genderRadio" value="M" checked> 남자 &nbsp;&nbsp;&nbsp; 
-			<input type="radio" name="genderRadio" value="F"> 여자
+			<input type="radio" name="genderRadio" value="M" checked 
+			onclick="suntaek_gender('M');">남자
+			&nbsp;&nbsp;&nbsp;
+			<input type="radio" name="genderRadio" value="F"
+			onclick="suntaek_gender('F');">여자
 			<br>
-			<input type="text" name=gender" id="gender">
+			<input type="hidden" name="gender" id="gender" value="M">
 		</td>
 	</tr>
 	<tr>
@@ -45,130 +46,96 @@
 		<td><input type="text" name="bornYear" id="bornYear" value="1990"></td>
 	</tr>
 	<tr>
-		<td rowspan="3">주소</td>
+		<td>주소</td>
 		<td>
-			<input type="text" id="sample6_postcode" placeholder="우편번호">
-			<input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기">
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<input type="text" id="sample6_address" placeholder="주소">
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<input type="text" id="sample6_detailAddress" placeholder="상세주소">
-			<input type="text" id="sample6_extraAddress" placeholder="참고항목">
+			<input type="text" id="sample6_postcode" name="postcode" placeholder="우편번호">
+			<input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기"><br>
+			<input type="text" id="sample6_address" name="address" placeholder="주소"><br>
+			<input type="text" id="sample6_detailAddress" name="detailAddress" placeholder="상세주소">
+			<input type="text" id="sample6_extraAddress" name="extraAddress" placeholder="참고항목">
 		</td>
 	</tr>
 	<tr>
 		<td colspan="2" align="center" style="height:50px;">
-			<button type="button" id="btnChuga">JOIN</button>
-			<button type="button" id="btnList">목록으로</button>
+			<button type="button" onclick="GoPage('chugaProc');">JOIN</button>
+			<button type="button" onclick="suntaek_proc('list','1','');">목록으로</button>		
 		</td>
 	</tr>
 </table>
+</form>
 
 <script>
-	$(document).ready(function(){
-		//var content = $("#content").val().replace(/(?:\r\n|\r|\n)/g,'<br/>');
-		//$("#content").val("--> " + content);
-		
-		$("#writer").focus();
-		
-		$("#btnChuga").click(function(){
-			if (confirm('가입하시겠습니까?')) {
-				suntaek_proc('chugaProc', '1', '');
-			}
-		});
-    	$("#btnList").click(function(){
-    		suntaek_proc('list', '1', '');
-		});
-    	
-    	$("#id_check_div").click(function(){
-    		id_check_div();
-		});
-    	$("#id_check_win").click(function(){
-    		id_check_win();
-		});
+
+
+$(document).ready(function() {
+	$("#writer").focus(); //페이지 준비 되면 바로 입력할수 있도록 커서띄움
+	
+	$("#btnChuga").click(function() {
+		if (confirm('등록하시겠습니까?')) {
+			suntaek_proc('chugaProc','1','');
+		}
+	});
+	$("#btnList").click(function(){
+		suntaek_proc('list','1','');
+	});
+	$("#id_check_div").click(function(){
+		id_check_div();
+	});
+	$("#id_check_win").click(function(){
+		id_check_win();
 	});
 	
-	function id_check_div(){  
-		var id = $("#id").val();
-		if (id == '') {
-			 $("#label_id").html('아이디를 입력하세요.');
-			 $("#label_id").css('color', 'green');
-			 $("#label_id").css('font-size', '8px');
-			 return;
-		}
+});
 
-		var param = "id=" + id; //입력한 값을 쿼리스트링으로 만들어서 전달
+
+function id_check_div(){
+	var id = $("#id").val();
+	if(id==''){
+		$("#label_id").html('아이디를 입력하세요.');
+		$("#label_id").css('color','green');
+		$("#label_id").css('font-size','8px');
+		return;
+	}
+	var param = "id=" + id;
+	$.ajax({
+		type:"post",
+		data:param,
+		url:"${path}/member/id_check.do",
+		success:function(result){
+			if(result >0){
+				$("#id").val('');
+				$("#label_id").html("사용할 수 없는 아이디입니다.");
+				$("#label_id").css('color','red');
+				$("#label_id").css('font-size','8px');
+			}else{
+				$("#label_id").html("사용할 수 있는 아이디입니다.");
+				$("#label_id").css('color','blue');
+				$("#label_id").css('font-size','8px');
+			}	
+		}
+	});
 	
-		$.ajax({
-			type: "post",
-			data: param,
-			url: "${path}/member/id_check.do",
-			success: function(result){
-				if (result > 0) {
-					$("#id").val('');
-					$("#label_id").html("사용할 수 없는 아이디입니다.");
-					$("#label_id").css('color', 'red');
-		    		$("#label_id").css('font-size', '8px');
-				} else {
-					$("#label_id").html("사용할 수 있는 아이디입니다.");
-					$("#label_id").css('color', 'blue');
-		    		$("#label_id").css('font-size', '8px');
-				}
-			}
-		});
-	} 
-	function id_check_win(){  
-	    window.open("${path}/member/id_check_win.do", "네이버새창", "width=640, height=480, toolbar=no, menubar=no, scrollbars=no, resizable=yes" );  
-	} 
+}
+
+
+function id_check_win(){
+	window.open("${path}/member/id_check_win.do", "아이디체크창", "width=640, height=480, toolbar=no, menubar=no, scrollbars=no, resizable=yes");
+}
 </script>
 
 
-<%-- 
-* 도로명 주소
-
-가. 도로명 주소 사이트
-이메일 발송을 위해서는 메일 서버가 필요함
-
-- 행정자치부 
-  http://www.juso.go.kr
-
-- 개발자센터에서 API 신청 가능
-  https://www.juso.go.kr/addrlink/devAddrLinkRequestWrite.do?returnFn=write&ctcMenu=URL
-  
-               
- 나. 우편번호, 주소 서비스 방법
- 
- 1) 직접 구축
- 2018년 9월 현재 건물 DB 다운로드 141MB, 압축풀면 1.72휴
- http://www.juso.go.kr/addrlink/addressBuildDevNew.do?menu=mainJusoDb
- 
- - 예를 들어 세종시 자료를 엑셀에서 읽어들임(구분자 |)
- - 텍스트 파일을 엑셀로 읽어서 (구분자 |) csv로 변환한 후 필요한 컬럼만 선택한 후 저장
- - 데이타를 import할 테이블을 미리 생성한 후
- - SQL Developer에서 import하여 테이블로 저장
- 
- 
- 
- 2) API 사용
- 
- * 다음 API
- - http://postcode.map.daum.net/guide
---%>	
 
 
-<!-- 다음 api 스크립트 추가 -->
+
+
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
-    function sample6_execDaumPostcode() {
+//다음 API
+function sample6_execDaumPostcode() {
         new daum.Postcode({
             oncomplete: function(data) {
                 // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
                 // 각 주소의 노출 규칙에 따라 주소를 조합한다.
                 // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
                 var addr = ''; // 주소 변수
@@ -212,3 +179,6 @@
         }).open();
     }
 </script>
+
+
+

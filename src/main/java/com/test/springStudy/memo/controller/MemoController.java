@@ -15,9 +15,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.test.springStudy.common.Util;
+import com.test.springStudy.member.model.dto.MemberDTO;
 import com.test.springStudy.memo.model.dao.MemoDAO;
 import com.test.springStudy.memo.model.dto.MemoDTO;
 
@@ -50,26 +52,23 @@ public class MemoController {
 			Model model
 			) throws IOException {		
 		Map<String,Object> map = topInfo(request);
+		String path = (String)map.get("path");
+		int cookNo = request.getSession().getAttribute("cookNo") != null ? (int)request.getSession().getAttribute("cookNo"): 0;
 		
-		String cookId = 
-				request.getSession()
-				.getAttribute("cookId") != null
-				?(String)request.getSession()
-						.getAttribute("cookId"): null;
-		
-		String ip = (String)map.get("ip");
-		
-		String arg01 = request.getParameter("arg01");
-		arg01 = util.nullCheck(arg01);
-		
-		String menu_gubun = "memo_index";
-		if(cookId == null) menu_gubun = "member_index";
-		
-		model.addAttribute("menu_gubun",menu_gubun);
-		model.addAttribute("ip",ip);
-		model.addAttribute("arg01",arg01);
+		if (cookNo == 0) {
+			response.setContentType("text/html; charset=utf-8");
+			PrintWriter out = response.getWriter();
+			out.println("<script>");
+			out.println("alert('로그인 후 사용가능.');");
+			out.println("location.href='"+path+"';");
+			out.println("</script>");
+			return null;
+		}else {
+			model.addAttribute("menu_gubun", "memo_index");
+			return "main/main";
+		}
 			
-		return "main/main";
+		
 	}
 	
 	@RequestMapping("memo/list.do")
@@ -180,82 +179,68 @@ public class MemoController {
 		
 		return "memo/list";
 	}
-	@RequestMapping("sujungProc.do")
+	@RequestMapping("memo/sujungProc.do")
 	public void memo_sujungProc(
+			HttpServletRequest request,
 			HttpServletResponse response,
 			Model model,
-			@RequestParam(value="cookId", defaultValue="") String cookId,
-			@RequestParam(value="cookNo", defaultValue="") int cookNo,
-			@RequestParam(value="oneno", defaultValue="") int oneno,
-			@RequestParam(value="writerName", defaultValue="") String writerName,
-			@RequestParam(value="memo", defaultValue="") String memo
-			
+			@RequestParam(value="no",defaultValue="") int no,
+			@RequestParam(value="writerName",defaultValue="") String writerName,
+			@RequestParam(value="content",defaultValue="") String content
 			) throws IOException {
-		MemoDTO sujungdto = memoDao.getOne(oneno);
-		sujungdto.setWriterName(writerName);
-		sujungdto.setMemo(memo);
+//		HttpSession session = request.getSession();
+//		String cookId = (String)session.getAttribute("cookId");
+//		cookId = util.nullCheck(cookId);
+//		
+		System.out.println("수정들어옴");
+		MemoDTO sujungDto = memoDao.getOne(no);
+		sujungDto.setWriterName(writerName);
+		sujungDto.setMemo(content);
 		
-		if (cookId != sujungdto.getWriterId()) {
-			PrintWriter out = response.getWriter();
-			out.println("<script>");
-			out.println("alert('본인의 메모만 수정할 수 있습니다.')");
-			out.println("location.href='memo/index';");
-			out.println("</script>");
-		}
-		if (cookId == sujungdto.getWriterId()|| cookNo == 51) {
-			
-			int result = memoDao.setSujung(sujungdto);
-			System.out.println("result:"+result);
-			model.addAttribute("menu_gubun", "member_sujungProc");
-			
-			PrintWriter out = response.getWriter();
-	    	if(result>0) {
-	    	  out.println("<script>$('#span_passwd').text('T');</script>");
-	    	}else {
-	    	  out.println("<script>$('#span_passwd').text('F');</script>"); 
-	    	}
-	    	out.flush();
-	    	out.close();
-		}
+		int result = memoDao.setSujung(sujungDto);
+		model.addAttribute("menu_gubun","memo_sujungProc");
+		
+		response.setContentType("text/html; charset=UTF-8");
+		PrintWriter out = response.getWriter();
+    	if(result>0) {
+    	  out.println("<script>$('#span_passwd').text('T');</script>");
+    	}else {
+    	  out.println("<script>$('#span_passwd').text('F');</script>"); 
+    	}
+    	out.flush();
+    	out.close();
 	}
 	
-	@RequestMapping("sakjaeProc.do")
+	@RequestMapping("memo/sakjaeProc.do")
 	public void memo_sakjaeProc(
+			HttpServletRequest request,
 			HttpServletResponse response,
 			Model model,
-			@RequestParam(value="cookId", defaultValue="") String cookId,
-			@RequestParam(value="cookNo", defaultValue="") int cookNo,
-			@RequestParam(value="oneno", defaultValue="") int oneno,
-			@RequestParam(value="writerName", defaultValue="") String writerName,
-			@RequestParam(value="memo", defaultValue="") String memo
-			
+			@RequestParam(value="no",defaultValue="") int no,
+			@RequestParam(value="writerName",defaultValue="") String writerName,
+			@RequestParam(value="content",defaultValue="") String content
 			) throws IOException {
-		MemoDTO sakjaedto = memoDao.getOne(oneno);
-				
-		if (cookId != sakjaedto.getWriterId()) {
-			response.setCharacterEncoding("UTF-8");
-			response.setContentType("text/html; charset=UTF-8");
-			PrintWriter out = response.getWriter();
-			out.println("<script>");
-			out.println("alert('본인의 메모만 삭제할 수 있습니다.')");
-			out.println("location.href='memo/index';");
-			out.println("</script>");
-		}
-		if (cookId == sakjaedto.getWriterId()|| cookNo == 51) {
+		HttpSession session = request.getSession();
+		String cookId = (String)session.getAttribute("cookId");
+		cookId = util.nullCheck(cookId);
+		
+		System.out.println("삭제들어옴");
+		MemoDTO sakjaedto = memoDao.getOne(no);
+		
+		int result = memoDao.setSakjae(sakjaedto);
+		model.addAttribute("menu_gubun","memo_sakjaeProc");
+		
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType("text/html; charset=UTF-8");
+		PrintWriter out = response.getWriter();
+    	if(result>0) {
+    	  out.println("<script>$('#span_passwd').text('T');</script>");
+    	}else {
+    	  out.println("<script>$('#span_passwd').text('F');</script>"); 
+    	}
+    	out.flush();
+    	out.close();
+	}	
 			
-			int result = memoDao.setSakjae(sakjaedto);
-			System.out.println("result:"+result);
-			model.addAttribute("menu_gubun", "member_sujungProc");
-			
-			PrintWriter out = response.getWriter();
-	    	if(result>0) {
-	    	  out.println("<script>$('#span_passwd').text('T');</script>");
-	    	}else {
-	    	  out.println("<script>$('#span_passwd').text('F');</script>"); 
-	    	}
-	    	out.flush();
-	    	out.close();
-		}
-	}
 	
 }

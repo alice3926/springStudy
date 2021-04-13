@@ -1,5 +1,7 @@
 package com.test.springStudy.member.controller;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +9,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,17 +48,13 @@ public class MemberController {
 	public String member_index(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			Model model
+			Model model,
+			@RequestParam(value="word", defaultValue="") String word
 			) throws UnknownHostException {
 		Map<String,Object> map = topInfo(request);
 		String ip = (String) map.get("ip");
-		
-		String arg01 = request.getParameter("arg01");
-		arg01 = util.nullCheck(arg01);
-		
+		model.addAttribute("word",word);
 		model.addAttribute("menu_gubun","member_index");
-		model.addAttribute("ip",ip);
-		model.addAttribute("arg01",arg01);
 		return "main/main";//WEB-INF/views생략되어 있음.
 	}
 	
@@ -72,7 +71,7 @@ public class MemberController {
 		String search_option = (String) map.get("search_option");
 		String search_data = (String) map.get("search_data");
 		
-		int pageSize = 10;
+		int pageSize = 3;
 		int blockSize = 10;
 		int totalRecord = memberDao.getTotalRecord(search_option, search_data);
 		int[] pagerArray = util.pager(pageSize, blockSize, totalRecord, pageNumber);
@@ -87,7 +86,7 @@ public class MemberController {
 		
 		model.addAttribute("menu_gubun", "member_list");
 		model.addAttribute("list", list);
-//		model.addAttribute("pageNumber", pageNumber);
+		model.addAttribute("pageNumber", pageNumber);
 		model.addAttribute("pageSize", pageSize);
 		model.addAttribute("blockSize", blockSize);
 		model.addAttribute("totalRecord", totalRecord);
@@ -103,20 +102,40 @@ public class MemberController {
 	@RequestMapping("view.do")
 	public String member_view(
 			HttpServletRequest request,
+			HttpServletResponse response,
 			Model model
-			) throws UnknownHostException {
+			) throws IOException {
+		
 		
 //		Map<String, Object> map = util.basicInfo(request);
 		Map<String, Object> map = topInfo(request);
 		int no = (int) map.get("no");
+		String path = (String)map.get("path");
+		
 		String search_option = (String) map.get("search_option");
 		String search_data = (String) map.get("search_data");
 		
-		MemberDTO dto = memberDao.getOne(no, search_option, search_data);
+		int cookNo = request.getSession().getAttribute("cookNo") != null ? (int)request.getSession().getAttribute("cookNo"): null;
 		
-		model.addAttribute("menu_gubun", "member_view");
-		model.addAttribute("dto", dto);
-		return "member/view";
+		if(cookNo == 51) {
+			MemberDTO dto = memberDao.getOne(no, search_option, search_data);
+			model.addAttribute("menu_gubun", "member_view");
+			model.addAttribute("dto", dto);
+			return "member/view";
+		}else if (cookNo != no) {
+			response.setContentType("text/html; charset=utf-8");
+			PrintWriter out = response.getWriter();
+			out.println("<script>");
+			out.println("alert('자신의 상세정보만 접근가능.');");
+			out.println("suntaek_proc('list', '1', '');");
+			out.println("</script>");
+			return null;
+		}else{
+			MemberDTO dto = memberDao.getOne(no, search_option, search_data);
+			model.addAttribute("menu_gubun", "member_view");
+			model.addAttribute("dto", dto);
+			return "member/view";
+		}
 	}
 	
 	@RequestMapping("chuga.do")
@@ -134,11 +153,11 @@ public class MemberController {
 			@RequestParam(value="name", defaultValue="") String name,
 			@RequestParam(value="gender", defaultValue="") String gender,
 			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
-			) {
+			@RequestParam(value="postcode", defaultValue="") String postcode,
+			@RequestParam(value="address", defaultValue="") String address,
+			@RequestParam(value="detailAddress", defaultValue="") String detailAddress,
+			@RequestParam(value="extraAddress", defaultValue="") String extraAddress
+			) throws IOException {
 		
 		MemberDTO dto = new MemberDTO();
 		dto.setId(id);
@@ -147,17 +166,22 @@ public class MemberController {
 		dto.setGender(gender);
 		dto.setBornYear(bornYear);
 		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
+		dto.setPostcode(postcode);
+		dto.setAddress(address);
+		dto.setDetailAddress(detailAddress);
+		dto.setExtraAddress(extraAddress);
 		
-		System.out.println(dto.getId());
-		
-		
+			
 		int result = memberDao.setInsert(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_chugaProc");
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		if (result > 0) {
+			out.println("<script>$('#span_passwd').text('T');</script>");
+		} else {
+			out.println("<script>$('#span_passwd').text('F');</script>");
+		}
+		out.flush();
+		out.close();
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");
@@ -204,11 +228,11 @@ public class MemberController {
 			@RequestParam(value="name", defaultValue="") String name,
 			@RequestParam(value="gender", defaultValue="") String gender,
 			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
-			) {
+			@RequestParam(value="postcode", defaultValue="") String postcode,
+			@RequestParam(value="address", defaultValue="") String address,
+			@RequestParam(value="detailAddress", defaultValue="") String detailAddress,
+			@RequestParam(value="extraAddress", defaultValue="") String extraAddress
+			) throws IOException {
 		
 		MemberDTO dto = new MemberDTO();
 		dto.setId(id);
@@ -217,17 +241,22 @@ public class MemberController {
 		dto.setGender(gender);
 		dto.setBornYear(bornYear);
 		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
-		
-		System.out.println(dto.getId());
-		
+		dto.setPostcode(postcode);
+		dto.setAddress(address);
+		dto.setDetailAddress(detailAddress);
+		dto.setExtraAddress(extraAddress);
 		
 		int result = memberDao.setSujung(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_sujungProc");
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		if (result > 0) {
+			out.println("<script>$('#span_passwd').text('T');</script>");
+		} else {
+			out.println("<script>$('#span_passwd').text('F');</script>");
+		}
+		out.flush();
+		out.close();
+
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");
@@ -247,8 +276,8 @@ public class MemberController {
 	
 	
 	
-	@RequestMapping("sakje.do")
-	public String member_sakje(HttpServletRequest request,
+	@RequestMapping("sakjae.do")
+	public String member_sakjae(HttpServletRequest request,
 			Model model
 			) throws UnknownHostException {
 		
@@ -260,45 +289,34 @@ public class MemberController {
 		
 		MemberDTO dto = memberDao.getOne(no, search_option, search_data);
 		
-		model.addAttribute("menu_gubun", "member_sakje");
+		model.addAttribute("menu_gubun", "member_sakjae");
 		model.addAttribute("dto", dto);
 	
 		return "member/sakjae";
 	}
-	@RequestMapping("sakjeProc.do")
-	public void member_sakjeProc(
+	@RequestMapping("sakjaeProc.do")
+	public void member_sakjaeProc(
 			HttpServletResponse response,
 			Model model,
 			@RequestParam(value="id", defaultValue="") String id,
-			@RequestParam(value="passwd", defaultValue="") String passwd,
-			@RequestParam(value="passwdChk", defaultValue="") String passwdChk,
-			@RequestParam(value="name", defaultValue="") String name,
-			@RequestParam(value="gender", defaultValue="") String gender,
-			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
-			) {
+			@RequestParam(value="passwd", defaultValue="") String passwd
+			) throws IOException {
 		
 		MemberDTO dto = new MemberDTO();
 		dto.setId(id);
 		dto.setPasswd(passwd);
-		dto.setName(name);
-		dto.setGender(gender);
-		dto.setBornYear(bornYear);
-		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
-		
-		System.out.println(dto.getId());
-		
 		
 		int result = memberDao.setSakjae(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_sakjeProc");
+		
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		if (result > 0) {
+			out.println("<script>$('#span_passwd').text('T');</script>");
+		} else {
+			out.println("<script>$('#span_passwd').text('F');</script>");
+		}
+		out.flush();
+		out.close();
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");
@@ -314,8 +332,104 @@ public class MemberController {
 		}
 */		
 	}
+	@RequestMapping("/id_check.do")
+	public void member_id_check(
+			HttpServletResponse response,
+			@RequestParam(value="id", defaultValue="") String id
+			) throws IOException {
+		int result = memberDao.getIdCheck(id);
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		// System.out.println(result+"MC");
+		out.println(result);
+		out.flush();
+		out.close();
+	}
+	@RequestMapping("/id_check_win.do")
+	public String member_id_check_win(Model model){
+		model.addAttribute("menu_gubun", "member_id_check_win");
+		return "member/id_check";
+	}
 	
 	
+	@RequestMapping("id_check_win_Proc.do")
+	public void member_id_check_win_Proc(
+			HttpServletResponse response,
+			@RequestParam(value="id", defaultValue="") String id
+			
+			) throws IOException {
+		String result = memberDao.getIdCheckWin(id);
+		
+		if (result == null || result.equals("")) {
+			result = id;
+		} else {
+			result = "";
+		}
+		
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		// System.out.println(result+"MC");
+		out.println(result);
+		out.flush();
+		out.close();
+	}
+	@RequestMapping("/login.do")
+	public String member_login(Model model){
+		model.addAttribute("menu_gubun", "member_login");
+		return "member/login";
+	}
+	@RequestMapping("/loginProc.do")
+	public String loginProc(
+			HttpServletRequest request,
+			@RequestParam(value="id", defaultValue="") String id,
+			@RequestParam(value="passwd", defaultValue="") String passwd
+			) throws UnknownHostException {
+		Map<String, Object> map = topInfo(request);
+		String path = (String)map.get("path");
+		MemberDTO dto = new MemberDTO();
+		
+		dto.setId(id);
+		dto.setPasswd(passwd);
+		
+		MemberDTO resultDto = memberDao.setlogin(dto);
+		
+		String temp = "";
+		
+		if (resultDto == null) {
+			temp = "index.do?word=login";
+		} else if (resultDto.getNo() == 0) { // 실패
+			temp = "index.do?word=login";
+		} else { // 성공
+			// 세션 등록
+			HttpSession session = request.getSession();
+			
+			session.setAttribute("cookNo", resultDto.getNo());
+			session.setAttribute("cookId", resultDto.getId());
+			session.setAttribute("cookName", resultDto.getName());
+			temp = "index.do";
+		}
+
+		return "redirect:" + temp;
+	}
+	@RequestMapping("/logout.do")
+	public void member_logout(
+			HttpServletRequest request,
+			HttpServletResponse response
+			) throws IOException {
+		// 세션 해제
+		HttpSession session = request.getSession();
+		session.invalidate();
+		
+		Map<String, Object> map = topInfo(request);
+		String path = (String)map.get("path");
+		
+		response.setContentType("text/html; charset=utf-8");
+		PrintWriter out = response.getWriter();
+		out.println("<script>");
+		out.println("alert('로그아웃 되었습니다.');");
+		out.println("location.href='" + path + "';");
+		out.println("</script>");
+	}
 	
 	
 }

@@ -40,11 +40,11 @@
 	<tr>
 		<td>주소</td>
 		<td>
-			<input type="text" id="sample6_postcode" name="sample6_postcode" value="${dto.postcode }">
+			<input type="text" id="sample6_postcode" name="postcode" value="${dto.postcode }">
 			<input type="button" onclick="sample6_execDaumPostcode()" value="우편번호 찾기"><br>
-			<input type="text" id="sample6_address" name="sample6_address" value="${dto.address }"><br>
-			<input type="text" id="sample6_detailAddress" name="sample6_detailAddress" value="${dto.detailAddress }">
-			<input type="text" id="sample6_extraAddress" name="sample6_extraAddress" value="${dto.extraAddress }">
+			<input type="text" id="sample6_address" name="address" value="${dto.address }"><br>
+			<input type="text" id="sample6_detailAddress" name="detailAddress" value="${dto.detailAddress }">
+			<input type="text" id="sample6_extraAddress" name="extraAddress" value="${dto.extraAddress }">
 		</td>
 	</tr>
 	

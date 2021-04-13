@@ -39,7 +39,7 @@
 	<tr>
 		<td colspan="2" align="center" style="height:50px;">
 			
-			<button type="button" onclick="suntaek_proc('sakjeProc','','${dto.no}');">삭제</button>			
+			<button type="button" onclick="suntaek_proc('sakjaeProc','','${dto.no}');">삭제</button>			
 		</td>
 	</tr>
 </table>

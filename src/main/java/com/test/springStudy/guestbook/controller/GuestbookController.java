@@ -21,6 +21,7 @@ import com.test.springStudy.guestbook.model.dto.GuestbookDTO;
 import com.test.springStudy.member.model.dto.MemberDTO;
 
 @Controller
+@RequestMapping("guestbook/")
 public class GuestbookController {
 	@Inject
 	GuestbookDAO dao;
@@ -41,7 +42,7 @@ public class GuestbookController {
 		map.put("search_data", search_data);
 		return map;
 	}
-	@RequestMapping("guestbook/index.do")
+	@RequestMapping("index.do")
 	public String index(
 			HttpServletRequest request,
 			HttpServletResponse response,
@@ -58,7 +59,7 @@ public class GuestbookController {
 		model.addAttribute("arg01",arg01);
 		return "main/main";
 	}
-	@RequestMapping("guestbook/list.do")
+	@RequestMapping("list.do")
 	public String guestbook_list(
 			HttpServletRequest request,
 			Model model
@@ -149,7 +150,7 @@ public class GuestbookController {
 	}
 	
 	
-	@RequestMapping("guestbook/sujung.do")
+	@RequestMapping("sujung.do")
 	public String guestbook_sujung(HttpServletRequest request,
 			Model model
 			) throws UnknownHostException {
@@ -236,13 +237,15 @@ public class GuestbookController {
 	
 		return "guestbook/sakjae";
 	}
-	@RequestMapping("guestbook/sakjeProc.do")
-	public void guestbook_sakjeProc(
+	
+	@RequestMapping("sakjaeProc.do")
+	public void guestbook_sakjaeProc(
 			HttpServletResponse response,
 			HttpServletRequest request,
 			Model model,
 			@RequestParam(value="passwd", defaultValue="") String passwd
 			) throws IOException {
+		System.out.println("삭제들어옴");
 		Map<String, Object> map = topInfo(request);
 		int no = (int) map.get("no");
 		
@@ -260,7 +263,7 @@ public class GuestbookController {
 		}
 		out.flush();
 		out.close();
-		model.addAttribute("menu_gubun", "guestbook_sakjeProc");
+		//model.addAttribute("menu_gubun", "guestbook_sakjaeProc");
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");

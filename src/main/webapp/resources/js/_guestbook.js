@@ -23,7 +23,7 @@ function GoPage(value1){
     var param;/*
 	var url = "${path}/guestbook_servlet/" + value1 + ".do";
 	var url = path+"/guestbook_servlet/" + value1 + ".do";*/
-	var url = $("#span_path").text() + "/guestbook_servlet/" + value1 + ".do";
+	var url = path + "/guestbook/" + value1 + ".do";
 	
 	if(value1 == "list"){
 		param = {
@@ -53,6 +53,7 @@ function GoPage(value1){
 		type: "post",
 		data: param,
 		url: url,
+		cache : false,
 		success: function(data){
 			if(value1 == "list" || value1 == "chuga"|| value1 == "sujung"|| value1 == "sakjae"){
 				$("#result").html(data);
@@ -85,7 +86,7 @@ function GoPage(value1){
 			 		suntaek_proc('sujung','0',$("#span_no").text());
 			 	}
 			}else{
-				$("#result").html(data);
+				//$("#result").html(data);
 			}
 		}
 	});
@@ -99,7 +100,7 @@ function suntaek_page(value1){
 	GoPage('list');
 }
 function suntaek_all(){
-	console.log('aaa');
+	console.log('suntaek_all');
 	$("#span_search_option").text("");
 	$("#span_search_data").text("");
 	suntaek_proc('list','1','');

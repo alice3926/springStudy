@@ -13,14 +13,18 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.test.springStudy.member.model.dto.CartDTO;
 import com.test.springStudy.shop.common.UtilProduct;
 import com.test.springStudy.shop.model.dao.CartDAO;
+import com.test.springStudy.shop.model.dao.ProductDAO;
+import com.test.springStudy.shop.model.dto.CartDTO;
+import com.test.springStudy.shop.model.dto.ProductDTO;
 
 @Controller
 public class MallController {
 	@Inject
-	CartDAO dao;
+	ProductDAO dao;	
+	@Inject
+	CartDAO cartDao;
 	
 	UtilProduct util = new UtilProduct();
 	
@@ -57,7 +61,7 @@ public class MallController {
 		model.addAttribute("arg01",arg01);
 		return "main/main";
 	}
-	@RequestMapping("list.do")
+	@RequestMapping("mall/mall_list.do")
 	public String mall_list(
 			HttpServletRequest request,
 			Model model
@@ -72,7 +76,7 @@ public class MallController {
 		
 		int pageSize = 10;
 		int blockSize = 10;
-		int totalRecord = dao.getTotalRecord();
+		int totalRecord = dao.getTotalRecord(search_option,search_data);
 		int[] pagerArray = util.pager(pageSize, blockSize, totalRecord, pageNumber);
 		int jj = pagerArray[0];
 		int startRecord = pagerArray[1];
@@ -81,9 +85,9 @@ public class MallController {
 		int startPage = pagerArray[4];
 		int lastPage = pagerArray[5];
 		
-		List<CartDTO> list = dao.getList(startRecord, lastRecord, search_option, search_data);
+		List<ProductDTO> list = dao.getList(startRecord, lastRecord, search_option, search_data);
 		
-		model.addAttribute("menu_gubun", "member_list");
+		model.addAttribute("menu_gubun", "mall_list");
 		model.addAttribute("list", list);
 //		model.addAttribute("pageNumber", pageNumber);
 		model.addAttribute("pageSize", pageSize);
@@ -96,10 +100,10 @@ public class MallController {
 		model.addAttribute("startPage", startPage);
 		model.addAttribute("lastPage", lastPage);
 		
-		return "member/list";
+		return "shop/mall/mall_list";
 	}
-	@RequestMapping("view.do")
-	public String member_view(
+	@RequestMapping("mall/mall_view.do")
+	public String mall_view(
 			HttpServletRequest request,
 			Model model
 			) throws UnknownHostException {
@@ -110,52 +114,32 @@ public class MallController {
 		String search_option = (String) map.get("search_option");
 		String search_data = (String) map.get("search_data");
 		
-		CartDTO dto = dao.getOne(no, search_option, search_data);
+		ProductDTO dto = dao.getView(no);
 		
 		model.addAttribute("menu_gubun", "member_view");
 		model.addAttribute("dto", dto);
-		return "member/view";
+		return "shop/mall/mall_view";
 	}
 	
-	@RequestMapping("chuga.do")
-	public String member_chuga(Model model) {
-		model.addAttribute("menu_gubun", "member_chuga");
-		return "member/chuga";
-	}
-	@RequestMapping("chugaProc.do")
-	public void member_chugaProc(
+	@RequestMapping("mall/cart_chuga.do")
+	public void member_chuga(
 			HttpServletResponse response,
+			HttpServletRequest request,
 			Model model,
-			@RequestParam(value="id", defaultValue="") String id,
-			@RequestParam(value="passwd", defaultValue="") String passwd,
-			@RequestParam(value="passwdChk", defaultValue="") String passwdChk,
-			@RequestParam(value="name", defaultValue="") String name,
-			@RequestParam(value="gender", defaultValue="") String gender,
-			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
-			) {
-		
-		CartDTO dto = new CartDTO();
-		dto.setId(id);
-		dto.setPasswd(passwd);
-		dto.setName(name);
-		dto.setGender(gender);
-		dto.setBornYear(bornYear);
-		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
-		
-		System.out.println(dto.getId());
+			@RequestParam(value="buy_counter", defaultValue="") int buy_counter
+			) throws UnknownHostException {
+		Map<String, Object> map = topInfo(request);
+		int no = (int) map.get("no");
+		int cookNo = (int)map.get("cookNo");
 		
 		
-		int result = dao.setInsert(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_chugaProc");
+		CartDTO cartDto = new CartDTO();
+		cartDto.setProductNo(no);
+		cartDto.setAmount(buy_counter);
+		cartDto.setMemberNo(cookNo);
+				
+		int result = cartDao.setInsert(cartDto);
+		model.addAttribute("menu_gubun", "mall_cart_chuga");
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");
@@ -171,132 +155,74 @@ public class MallController {
 		}
 */		
 	}
-	
-	
-	@RequestMapping("sujung.do")
-	public String member_sujung(HttpServletRequest request,
+	@RequestMapping("mall/cart_list.do")
+	public String cart_list(
+			HttpServletRequest request,
 			Model model
 			) throws UnknownHostException {
 		
 //		Map<String, Object> map = util.basicInfo(request);
 		Map<String, Object> map = topInfo(request);
+		int pageNumber = (int) map.get("pageNumber");
 		int no = (int) map.get("no");
 		String search_option = (String) map.get("search_option");
 		String search_data = (String) map.get("search_data");
 		
-		CartDTO dto = dao.getOne(no, search_option, search_data);
+		int pageSize = 10;
+		int blockSize = 10;
+		int totalRecord = cartDao.getTotalRecord();
+		int[] pagerArray = util.pager(pageSize, blockSize, totalRecord, pageNumber);
+		int jj = pagerArray[0];
+		int startRecord = pagerArray[1];
+		int lastRecord = pagerArray[2];
+		int totalPage = pagerArray[3];
+		int startPage = pagerArray[4];
+		int lastPage = pagerArray[5];
 		
-		model.addAttribute("menu_gubun", "member_sujung");
-		model.addAttribute("dto", dto);
-	
-		return "member/sujung";
+		List<CartDTO> list = cartDao.getList(startRecord, lastRecord);
+		
+		model.addAttribute("menu_gubun", "cart_list");
+		model.addAttribute("list", list);
+//		model.addAttribute("pageNumber", pageNumber);
+		model.addAttribute("pageSize", pageSize);
+		model.addAttribute("blockSize", blockSize);
+		model.addAttribute("totalRecord", totalRecord);
+		model.addAttribute("jj", jj);
+		model.addAttribute("startRecord", startRecord);
+		model.addAttribute("lastRecord", lastRecord);
+		model.addAttribute("totalPage", totalPage);
+		model.addAttribute("startPage", startPage);
+		model.addAttribute("lastPage", lastPage);
+		
+		return "shop/mall/cart_list";
 	}
 	
-	@RequestMapping("sujungProc.do")
-	public void member_sujungProc(
-			HttpServletResponse response,
+	@RequestMapping("mall/cart_sujung.do")
+	public void member_sujung(
+			HttpServletRequest request,
 			Model model,
-			@RequestParam(value="id", defaultValue="") String id,
-			@RequestParam(value="passwd", defaultValue="") String passwd,
-			@RequestParam(value="passwdChk", defaultValue="") String passwdChk,
-			@RequestParam(value="name", defaultValue="") String name,
-			@RequestParam(value="gender", defaultValue="") String gender,
-			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
-			) {
-		
-		CartDTO dto = new CartDTO();
-		dto.setId(id);
-		dto.setPasswd(passwd);
-		dto.setName(name);
-		dto.setGender(gender);
-		dto.setBornYear(bornYear);
-		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
-		
-		System.out.println(dto.getId());
-		
-		
-		int result = dao.setSujung(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_sujungProc");
-/*
-		try {
-  			response.setContentType("text/html; charset=utf-8");
-			PrintWriter out = response.getWriter();
-			out.println("<script>");
-			out.println("alert('정상적으로 등록되었습니다.');");
-			out.println("suntaek_proc('list', '1', '');");
-			out.println("</script>");
-			out.flush();
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-*/		
-	}
-	
-	
-	
-	
-	@RequestMapping("sakje.do")
-	public String member_sakje(HttpServletRequest request,
-			Model model
+			@RequestParam(value="buy_counter", defaultValue="") int buy_counter
 			) throws UnknownHostException {
 		
 //		Map<String, Object> map = util.basicInfo(request);
 		Map<String, Object> map = topInfo(request);
 		int no = (int) map.get("no");
-		String search_option = (String) map.get("search_option");
-		String search_data = (String) map.get("search_data");
 		
-		CartDTO dto = dao.getOne(no, search_option, search_data);
-		
-		model.addAttribute("menu_gubun", "member_sakje");
-		model.addAttribute("dto", dto);
-	
-		return "member/sakjae";
+		cartDao.setSujung(no, buy_counter);
 	}
-	@RequestMapping("sakjeProc.do")
+	
+
+	@RequestMapping("mall/cart_clear.do")
 	public void member_sakjeProc(
 			HttpServletResponse response,
 			Model model,
-			@RequestParam(value="id", defaultValue="") String id,
-			@RequestParam(value="passwd", defaultValue="") String passwd,
-			@RequestParam(value="passwdChk", defaultValue="") String passwdChk,
-			@RequestParam(value="name", defaultValue="") String name,
-			@RequestParam(value="gender", defaultValue="") String gender,
-			@RequestParam(value="bornYear", defaultValue="0") int bornYear,
-			@RequestParam(value="sample6_postcode", defaultValue="") String sample6_postcode,
-			@RequestParam(value="sample6_address", defaultValue="") String sample6_address,
-			@RequestParam(value="sample6_detailAddress", defaultValue="") String sample6_detailAddress,
-			@RequestParam(value="sample6_extraAddress", defaultValue="") String sample6_extraAddress
+			@RequestParam(value="chk_no", defaultValue="") String chk_no
 			) {
-		
-		CartDTO dto = new CartDTO();
-		dto.setId(id);
-		dto.setPasswd(passwd);
-		dto.setName(name);
-		dto.setGender(gender);
-		dto.setBornYear(bornYear);
-		
-		dto.setPostcode(sample6_postcode);
-		dto.setAddress(sample6_address);
-		dto.setDetailAddress(sample6_detailAddress);
-		dto.setExtraAddress(sample6_extraAddress);
-		
-		System.out.println(dto.getId());
-		
-		
-		int result = dao.setSakjae(dto);
-		System.out.println("result - :" + result);
-		model.addAttribute("menu_gubun", "member_sakjeProc");
+			String[] array = chk_no.split(",");
+		  	for(int i=0; i<array.length; i++) {
+		  	  System.out.println(array[i]);
+		  	}
+		  	cartDao.setDeleteBatch(array);
 /*
 		try {
   			response.setContentType("text/html; charset=utf-8");

@@ -49,7 +49,7 @@ function search(){
 	$.ajax({
 		type: "post",
 		data: $('form').serialize(),
-		url: "${path}/member_servlet/id_check_win_Proc.do",
+		url: "${path}/member/id_check_win_Proc.do",
 		success: function(data){
 			$("#id").val(id);
 			$("#result").val(data);

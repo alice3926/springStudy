@@ -49,7 +49,7 @@ PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
     	</selectKey>
     
     
-    	insert into member(NO, ID, PASSWD, NAME, GENDER,BORNYEAR, REGIDATE,POSTCODE, ADDRESS, DETAILADDRESS,EXTRAADDRESS, LASTUPDATE) values(#{no},#{dto.id},#{dto.passwd},#{dto.name},#{dto.gender},#{dto.bornYear},current_timestamp,#{dto.postcode},#{dto.address},#{dto.detailAddress},#{dto.extraAddress},current_timestamp)
+    	insert into member values(#{no},#{dto.id},#{dto.passwd},#{dto.name},#{dto.gender},#{dto.bornYear},current_timestamp,#{dto.postcode},#{dto.address},#{dto.detailAddress},#{dto.extraAddress},current_timestamp)
     </insert>
     <select id="setlogin" resultType="com.test.springStudy.member.model.dto.MemberDTO">
     	select no,id,passwd,name from member where id=#{id} and passwd=#{passwd}

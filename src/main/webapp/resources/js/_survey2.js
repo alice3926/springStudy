@@ -32,7 +32,7 @@ function suntaek_proc(value1, value2, value3){
 
 function GoPage(value1){
     var param;
-	var url = $("#span_path").text() + "/survey_servlet/" + value1 + ".do";
+	var url = path + "/survey/" + value1 + ".do";
 	
 	if(value1 == "list"){
 		param = {
@@ -158,7 +158,7 @@ function suntaek_status(value1){
 	         $.ajax({
 	            type:"post",
 	            data: param,
-	            url: "${path}/survey_servlet/saveProc.do",
+	            url: "${path}/survey/saveProc.do",
 	            success: function(){
 	               suntaek_page('1');
 	            }
@@ -170,7 +170,7 @@ function suntaek_status(value1){
     function GoViewProc(){//view.jsp에서
     if(confirm('저장하시겠습니까?')) {
     		DirForm.method="post";
-    		DirForm.action="${path}/survey_servlet/viewProc.do";
+    		DirForm.action="${path}/survey/viewProc.do";
     		DirForm.submit();
     }
  }
@@ -186,7 +186,7 @@ function GoViewProc2(){
 	  $.ajax({
         type: "post",
         data: param,
-        url: "${path}/survey_servlet/viewProc2.do",
+        url: "${path}/survey/viewProc2.do",
         success: function(data){
          	suntaek_proc('list','1','');
         }
